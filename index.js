@@ -8,15 +8,14 @@ server.listen(3000, () => {
     console.log("Server running on port 3000")
 });
 
-let playerBalance = 5; // player starting balance
+let playerList = [{playerId: 10, balance: 45}]; // player list mock
 
 // endpoints
-//endpoint to get player's balance
-
-server.get('/user', (req, res) => {
+server.get('/user', (_, res) => {
     return res.json({ user: 'API WORKING' })
 });
 
+//endpoint to get player's balance
 server.get('/balance/:playerId', (req, res) => {
     const playerId = req.params.playerId;
     const balance = playerBalance[playerId] || 0;
