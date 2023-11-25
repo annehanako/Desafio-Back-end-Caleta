@@ -4,17 +4,19 @@ const server = express();
 
 server.use(bodyParser.json());
 
-server.get('/user', (req, res) => {
-    return res.json({ user: 'API WORKING' })
-});
-
 server.listen(3000, () => {
     console.log("Server running on port 3000")
 });
 
 let playerBalance = 5; // player starting balance
+
 // endpoints
 //endpoint to get player's balance
+
+server.get('/user', (req, res) => {
+    return res.json({ user: 'API WORKING' })
+});
+
 server.get('/balance/:playerId', (req, res) => {
     const playerId = req.params.playerId;
     const balance = playerBalance[playerId] || 0;
