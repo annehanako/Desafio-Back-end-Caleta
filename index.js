@@ -17,8 +17,8 @@ server.get('/user', (_, res) => {
 
 //endpoint to get player's balance
 server.get('/balance/:playerId', (req, res) => {
-    const playerId = req.params.playerId;
-    const balance = playerBalance[playerId] || 0;
+    const playerId = parseInt(req.params.playerId);
+    const balance = playerList.find(player => player.playerId === playerId).balance
     res.json({ player: playerId, balance: balance});
 });
 
@@ -26,9 +26,9 @@ server.get('/balance/:playerId', (req, res) => {
 server.post('/bet/:playerId', (req, res) => {
     const { player, value } = req.body;
 
-    if (value <= playerBalance[player]){
-        playerBalance[player] -= value;
-        res.json ({ player: player, balance: playerBalance[player], txn: generateTransactionId()});
+    if (value <= playerList[player]){
+        playerList[player] -= value;
+        res.json ({ player: player, balance: playerList[player], txn: generateTransactionId()});
     } else {
         res.status(400).json({ success: false, message:'Insuficient funds.'});
     }  
@@ -39,8 +39,8 @@ server.post('/bet/:playerId', (req, res) => {
 server.post('/win', (req, res) =>{
     const { player, value } = req.body;
 
-    playerBalance[player] = (playerBalance[player] || 0) + value;
-    res.json ({player: player, balance: playerBalances[player], txn: generateTransactionId() });
+    playerList[player] = (playerList[player] || 0) + value;
+    res.json ({player: player, balance: playerList[player], txn: generateTransactionId() });
 });
 
 // rollback endpoint 
@@ -48,8 +48,8 @@ server.post('/win', (req, res) =>{
 server.post('/rollback', (req, res) => {
     const { player, txn, value } = req.body;
 
-    if (playerBalances[player] && txnExists(player, txn) && isBetTransaction(txn)) {
-        playerBalances[player] += value;
+    if (playerList[player] && txnExists(player, txn) && isBetTransaction(txn)) {
+        playerList[player] += value;
         res.json({ code: 'OK', balance: playerBalances[player] });
     } else {
         res.json({ code: 'Invalid' });
