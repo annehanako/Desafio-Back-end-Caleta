@@ -12,6 +12,7 @@
   "dependencies": {
     "express": "^4.18.2",
     "nodemon": "^3.0.1",
+    "sqlite3": "^5.1.6",
     "yarn": "^1.22.21"
   }
 }
