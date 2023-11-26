@@ -1,0 +1,284 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Caleta Gaming - BetApi",
+        "description": "API focused on bet transactions.",
+        "contact": {
+            "email": "anne.f.hanako@gmail.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:3000",
+            "description": "Production URL"
+        }
+    ],
+    "paths": {
+        "/player": {
+            "post": {
+                "summary": "Creation of new players",
+                "description": "Route dedicated to the creation of new players.",
+                "tags": [
+                    "Player"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Player"
+                            },
+                            "examples": {
+                                "player": {
+                                    "value": {
+                                        "balance": 400.50,
+                                        "description": "Player balance for transactions."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/balance/{playerId}": {
+            "get": {
+                "summary": "Player balance request",
+                "description": "Route dedicated to retrieving player balance.",
+                "tags": [
+                    "Player"
+                ],
+                "parameters": [
+                    {
+                        "name": "playerId",
+                        "in": "path",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true,
+                        "description": "ID of the player"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response with player balance",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "balance": 400.50,
+                                    "description": "Player balance for transactions."
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Player not found"
+                    }
+                }
+            }
+        },
+        "/bet": {
+            "post": {
+                "summary": "Place a bet",
+                "description": "Route for placing bets.",
+                "tags": [
+                    "Transaction"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BetRequest"
+                            },
+                            "example": {
+                                "playerId": 2,
+                                "value": 50
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response with bet details",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "player": 3,
+                                    "balance": 200,
+                                    "txn": 456
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "success": false,
+                                    "error": "Insufficient balance for the bet."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/win": {
+            "post": {
+                "summary": "Record a win",
+                "description": "Endpoint for recording a win for a player",
+                "tags": [
+                    "Transaction"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WinRequest"
+                            },
+                            "example": {
+                                "playerId": 1,
+                                "value": 200
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response with win details",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "player": "123",
+                                    "balance": 450,
+                                    "txn": "789"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "success": false,
+                                    "error": "Error adding funds to balance."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/rollback": {
+            "post": {
+                "summary": "Rollback a bet transaction",
+                "description": "Route for rolling back a transaction for a player.",
+                "tags": [
+                    "Transaction"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RollbackRequest"
+                            },
+                            "example": {
+                                "playerId": "7",
+                                "value": 50,
+                                "txn": 789
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response with rollback details",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "code": 200,
+                                    "balance": 400
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "success": false,
+                                    "error": "Error processing refund."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Player": {
+                "properties": {
+                    "balance": {
+                        "type": "number",
+                        "format": "float"
+                    }
+                }
+            },
+            "BetRequest": {
+                "type": "object",
+                "properties": {
+                    "playerId": {
+                        "type": "integer"
+                    },
+                    "value": {
+                        "type": "number",
+                        "format": "float"
+                    }
+                },
+                "required": [
+                    "playerId",
+                    "value"
+                ]
+            },
+            "WinRequest": {
+                "type": "object",
+                "properties": {
+                    "playerId": {
+                        "type": "integer"
+                    },
+                    "value": {
+                        "type": "number",
+                        "format": "float"
+                    }
+                },
+                "required": [
+                    "playerId",
+                    "value"
+                ]
+            },
+            "RollbackRequest": {
+                "type": "object",
+                "properties": {
+                    "playerId": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "number"
+                    },
+                    "txn": {
+                        "type": "integer"
+                    }
+                },
+                "required": ["playerId", "value", "txn"]
+            }
+        }
+    }
+}
