@@ -5,7 +5,7 @@ const db = require('./database.js');
 const router = require('./routes.js')
 const swagger = require('swagger-ui-express');
 
-const swaggerDoc = require('./swagger.json')
+const swaggerDoc = require('../documentation/swagger.json')
 
 server.use('/docs', swagger.serve, swagger.setup(swaggerDoc));
 

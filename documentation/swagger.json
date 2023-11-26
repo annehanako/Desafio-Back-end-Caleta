@@ -23,6 +23,7 @@
                     "Player"
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
@@ -31,9 +32,32 @@
                             "examples": {
                                 "player": {
                                     "value": {
-                                        "balance": 400.50,
-                                        "description": "Player balance for transactions."
+                                        "balance": 400.50
                                     }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response with new created player",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "playerId": 3,
+                                    "balance": 200
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "success": false,
+                                    "error": "Error"
                                 }
                             }
                         }
@@ -65,8 +89,8 @@
                         "content": {
                             "application/json": {
                                 "example": {
-                                    "balance": 400.50,
-                                    "description": "Player balance for transactions."
+                                    "playerId": 20,
+                                    "balance": 400.50
                                 }
                             }
                         }
@@ -277,7 +301,11 @@
                         "type": "integer"
                     }
                 },
-                "required": ["playerId", "value", "txn"]
+                "required": [
+                    "playerId",
+                    "value",
+                    "txn"
+                ]
             }
         }
     }
