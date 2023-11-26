@@ -31,7 +31,7 @@ router.post('/player', async (req, res) => {
             throw new Error("The balance value must be a positive number.");
 
         const player = await db.CreatePlayer(balance);
-        console.log(player[0].id)
+
         res.json({ player: player.id, balance: balance });
     } catch (err) {
         res.json({ error: err.message })
@@ -123,7 +123,7 @@ router.post('/rollback', async (req, res) => {
             return
         }
         if (transaction.isWin == 1) {
-            res.status(200).json({ code: 'Invalid' });
+            res.status(200).json({ code: "Invalid operation - can't rollback a Win transaction" });
             return
         }
 
