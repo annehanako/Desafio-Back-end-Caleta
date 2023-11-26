@@ -3,6 +3,9 @@ const bodyParser = require('body-parser');
 const server = express();
 const db = require('./database.js');
 const router = require('./routes.js')
+const swagger = require('swagger-ui-express');
+
+server.use('/docs', swagger.serve, swagger.setup())
 
 db.InitDB();
 
