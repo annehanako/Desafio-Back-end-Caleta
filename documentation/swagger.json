@@ -292,10 +292,11 @@
                 "type": "object",
                 "properties": {
                     "playerId": {
-                        "type": "string"
+                        "type": "integer"
                     },
                     "value": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float"
                     },
                     "txn": {
                         "type": "integer"
