@@ -1,16 +1,22 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const server = express();
-const db = require('./Database.js');
+const db = require('./database.js');
 
 db.InitDB();
 
-server.use(bodyParser.json());
+server.use((req, res, next) => {
+    bodyParser.json()(req, res, err => {
+        if (err) {
+            return res.sendStatus(400);
+        }
+        next();
+    })
+});
 
 server.listen(3000, () => {
     console.log("Server running on port 3000")
 });
-
 
 async function getPlayer(playerId) {
     const player = await db.GetPlayerBalance(playerId);
@@ -27,6 +33,27 @@ async function GetTransaction(txn, playerId, value) {
     }
     return transaction[0];
 }
+
+function ValidateTransaction(playerId, value) {
+    if (!playerId || isNaN(playerId))
+        throw new Error(`Invalid format for PlayerId: ${playerId}`)
+    if (!value || isNaN(value) || value <= 0)
+        throw new Error(`Invalid format for Value: ${value}`)
+}
+
+server.post('/player', async (req, res) => {
+    try {
+        const balance = (req.body.balance);
+        if (isNaN(balance))
+            throw new Error("The balance value must be a positive number.");
+
+        const player = await db.CreatePlayer(balance);
+        console.log(player[0].id)
+        res.json({ player: player.id, balance: balance });
+    } catch (err) {
+        res.json({ error: err.message })
+    }
+})
 
 server.get('/balance/:playerId', async (req, res) => {
     try {
@@ -49,14 +76,7 @@ server.get('/balance/:playerId', async (req, res) => {
 server.post('/bet', async (req, res) => {
     try {
         const { playerId, value } = req.body;
-
-        if (isNaN(playerId) || isNaN(value)) {
-            throw new Error("Input is not a number;")
-        }
-
-        if (value <= 0) {
-            throw new Error("The bet value must be a positive number.");
-        }
+        ValidateTransaction(playerId, value)
 
         let player = await getPlayer(playerId);
         const balance = player.balance;
@@ -64,14 +84,13 @@ server.post('/bet', async (req, res) => {
         if (balance < value) {
             throw new Error("Insuficcient balance for the bet.");
         }
+
         const newBalance = balance - value;
+
         await db.UpdateCurrentBalance(playerId, newBalance)
+        const txn = await db.RegisterTransaction(playerId, value);
 
-
-
-        await db.RegisterBet(playerId, value, newBalance);
-        res.json({ success: true, message: "Bet registered succesfully!" });
-
+        res.json({ player: player.id, balance: newBalance, txn: txn.id });
     } catch (error) {
         console.error("Error registering bet:", error.message);
         res.status(400).json({ success: false, error: error.message });
@@ -80,23 +99,20 @@ server.post('/bet', async (req, res) => {
 
 server.post('/win', async (req, res) => {
     try {
+        const isWin = 1;
         const { playerId, value } = req.body
 
-        if (isNaN(playerId) || isNaN(value)) {
-            throw new Error("Input is not a number;")
-        }
-        if (value <= 0) {
-            throw new Error("The value must be a positive number.");
+        ValidateTransaction(playerId, value);
 
-        } let player = await getPlayer(playerId);
+        let player = await getPlayer(playerId);
         const balance = player.balance;
 
         const newBalance = balance + value;
+
         await db.UpdateCurrentBalance(playerId, newBalance)
+        const txn = await db.RegisterTransaction(playerId, value, isWin);
 
-        await db.RegisterBet(playerId, value, newBalance);
-        res.json({ success: true, message: "Funds added to balance succesfully!" });
-
+        res.json({ player: player.id, balance: newBalance, txn: txn.id });
     } catch (error) {
         console.error("Error adding funds to balance:", error.message);
         res.status(400).json({ success: false, error: error.message });
@@ -108,37 +124,32 @@ server.post('/rollback', async (req, res) => {
     try {
         const { playerId, value, txn } = req.body;
 
-        if (!value || isNaN(value)) {
-            throw new Error(`Invalid refund value ${value}`)
-        }
-
-        if (!playerId || isNaN(playerId)) {
-            throw new Error(`Invalid player ID ${playerId}`)
-        }
+        ValidateTransaction(playerId, value)
 
         const player = await getPlayer(playerId);
+        const currentBalance = player.balance;
 
-        if (!player || player.length == 0) {
-            throw new Error(`Player with ID ${playerId} not found.`)
-        }
         if (!txn || isNaN(txn)) {
             throw new Error(`Invalid transaction ID ${txn}`)
         }
+
         const transaction = await GetTransaction(txn, playerId, value);
-        if (!transaction || transaction.length <= 0) {
-            throw new Error(`Transaction not found for the values:${txn, playerId, value}`)
+
+        if (transaction.isCanceled == 1) {
+            res.status(200).json({ code: 200, balance: currentBalance });
+            return
         }
-        if (transaction.isCanceled == 1){
-            throw new Error (`Transaction already cancelled.`)
+        if (transaction.isWin == 1) {
+            res.status(200).json({ code: 'Invalid' });
+            return
         }
-        const currentBalance = player.balance;
 
         const newBalance = currentBalance + transaction.betValue;
 
         await db.UpdateCurrentBalance(playerId, newBalance);
         await db.SetRefundOption(txn);
 
-        res.json({ success: true, message: "Refund processed succesfully." });
+        res.status(200).json({ code: 200, balance: newBalance });
     }
     catch (error) {
         console.error("Error processing refund.", error.message);
