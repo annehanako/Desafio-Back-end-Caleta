@@ -50,9 +50,9 @@ router.get('/balance/:playerId', async (req, res) => {
         if (result.length <= 0)
             throw new Error(`No results were found for the ID ${playerId}`)
 
-        res.json({ player: result.id, balance: result.balance });
+        res.status(200).json({ player: result.id, balance: result.balance });
     } catch (err) {
-        res.json({ error: err.message })
+        res.status(400).json({ success: false, error: err.message });
     }
 });
 
