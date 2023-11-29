@@ -67,8 +67,8 @@
         },
         "/delete": {
             "post": {
-                "summary": "Delete a player",
-                "description": "Route for deleting a player.",
+                "summary": "Soft Delete a player",
+                "description": "Route for soft deleting a player.",
                 "tags": [
                     "Player"
                 ],
@@ -87,7 +87,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Successful delete with 200 code",
+                        "description": "Successful soft delete with 200 code",
                         "content": {
                             "application/json": {
                                 "example": {
