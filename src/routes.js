@@ -27,14 +27,14 @@ function ValidateTransaction(playerId, value) {
 router.post('/player', async (req, res) => {
     try {
         const balance = (req.body.balance);
-        if (isNaN(balance))
+        if (isNaN(balance) || balance <=0) 
             throw new Error("The balance value must be a positive number.");
 
         const player = await db.CreatePlayer(balance);
 
-        res.json({ player: player.id, balance: balance });
+        res.status(200).json({ player: player.id, balance: balance });
     } catch (err) {
-        res.json({ error: err.message })
+        res.status(400).json({ error: err.message })
     }
 })
 
@@ -73,10 +73,10 @@ router.post('/bet', async (req, res) => {
         await db.UpdateCurrentBalance(playerId, newBalance)
         const txn = await db.RegisterTransaction(playerId, value);
 
-        res.json({ player: player.id, balance: newBalance, txn: txn.id });
-    } catch (error) {
-        console.error("Error registering bet:", error.message);
-        res.status(400).json({ success: false, error: error.message });
+        res.status(200).json({ player: player.id, balance: newBalance, txn: txn.id });
+    } catch (err) {
+        console.error("Error registering bet:", err.message);
+        res.status(400).json({ success: false, error: err.message });
     }
 });
 
@@ -96,9 +96,9 @@ router.post('/win', async (req, res) => {
         const txn = await db.RegisterTransaction(playerId, value, isWin);
 
         res.json({ player: player.id, balance: newBalance, txn: txn.id });
-    } catch (error) {
-        console.error("Error adding funds to balance:", error.message);
-        res.status(400).json({ success: false, error: error.message });
+    } catch (err) {
+        console.error("Error adding funds to balance:", err.message);
+        res.status(400).json({ success: false, error: err.message });
     }
 });
 
@@ -134,9 +134,9 @@ router.post('/rollback', async (req, res) => {
 
         res.status(200).json({ code: 200, balance: newBalance });
     }
-    catch (error) {
-        console.error("Error processing refund.", error.message);
-        res.status(400).json({ success: false, error: error.message });
+    catch (err) {
+        console.error("Error processing refund.", err.message);
+        res.status(400).json({ success: false, error: err.message });
     }
 });
 
