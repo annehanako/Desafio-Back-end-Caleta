@@ -2,7 +2,6 @@ const sqlite = require('sqlite3');
 const fs = require('fs');
 const dbFilePath = './database.sqlite';
 const dbCreated = fs.existsSync(dbFilePath);
-
 let database = null;
 
 function InitDB() {
@@ -29,7 +28,8 @@ function InitDB() {
                 isCanceled bool default 0 not null,
                 isWin bool default 0 not null,
                 FOREIGN KEY (playerId) REFERENCES Player(id)
-        );`)
+        );
+        `);
     }
 }
 
@@ -38,6 +38,7 @@ async function RunQuery(query, params) {
         database.all(query, params, (err, rows) => {
             if (err) {
                 reject(err);
+
             } else {
                 resolve(rows);
             }
@@ -48,6 +49,7 @@ async function RunQuery(query, params) {
 async function GetCreatedId() {
     let queryLastId = 'SELECT last_insert_rowid() as id'
     let result = await RunQuery(queryLastId);
+    
     return result[0];
 }
 
@@ -55,10 +57,10 @@ async function GetPlayerBalance(playerId) {
     try {
         let query = `SELECT * FROM Player where id = ? AND isDeleted = 0`;
 
-        return RunQuery(query, playerId)
+        return RunQuery(query, playerId);
     }
     catch (err) {
-        throw new Error(`Error querying database:${err.message} `)
+        throw new Error(`Error querying database:${err.message} `);
     }
 }
 
@@ -69,7 +71,7 @@ async function GetTransaction(txn, playerId, value) {
         return RunQuery(query, [txn, playerId, value]);
     }
     catch (err) {
-        throw new Error(`Error querying database:${err.message}`)
+        throw new Error(`Error querying database:${err.message}`);
     }
 }
 
@@ -77,10 +79,11 @@ async function RegisterTransaction(playerId, betValue, isWin = 0) {
     try {
         let query = `INSERT INTO BetTransactions (playerId, betValue, isWin) VALUES (?, ?, ?);`;
         RunQuery(query, [playerId, betValue, isWin]);
+
         return GetCreatedId();
     }
     catch (err) {
-        throw new Error(`Error querying database:${err.message}`)
+        throw new Error(`Error querying database:${err.message}`);
     }
 }
 
@@ -91,14 +94,16 @@ async function UpdateCurrentBalance(playerId, newBalance) {
         return RunQuery(query, [newBalance, playerId]);
     }
     catch (err) {
-        throw new Error(`Error querying database:${err.message}`)
+        throw new Error(`Error querying database:${err.message}`);
     }
 }
 
 async function SetRefundOption(txn) {
     try {
         let query = `UPDATE BetTransactions SET isCanceled = 1 WHERE id = ?`;
+
         return RunQuery(query, txn);
+
     } catch (err) {
         throw new Error(`Error querying database: ${err.message}`);
     }
@@ -107,20 +112,23 @@ async function SetRefundOption(txn) {
 async function CreatePlayer(balance) {
     try {
         let query = `INSERT INTO PLAYER (balance) VALUES (?)`;
-        await RunQuery(query, balance)
+        await RunQuery(query, balance);
 
         return await GetCreatedId();
+
     } catch (err) {
-        throw new Error(`Error while creating new player with balance ${balance}`)
+        throw new Error(`Error while creating new player with balance ${balance}`);
     }
 }
 
 async function DeletePlayer(playerId) {
     try {
         let query = `UPDATE PLAYER SET isDeleted = 1 WHERE ID = ? `
+
         return await RunQuery(query, playerId);
+
     } catch (err) {
-        throw new Error(`Error deleting player: ${playerId}`)
+        throw new Error(`Error deleting player: ${playerId}`);
     }
 }
 

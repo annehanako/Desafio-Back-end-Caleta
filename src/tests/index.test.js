@@ -1,56 +1,48 @@
-const request = require('supertest')
-const server = require('../server.js')
+const request = require('supertest');
+const server = require('../server.js');
 
+let mockPlayer = { player: 0, balance: 100, bet: 50, win: 100, txnBet: 0, txnWin: 0 };
 
-let mockPlayer = { player: 0, balance: 100, bet: 50, win: 100, txnBet: 0, txnWin: 0 }
+let nonExistingId = 12345;
 
-let nonExistingId = 12345
-
-
-//create a new player test
 describe('Create new player', () => {
     it('Should create a new player ID and add the balance to it', async () => {
-        // Send a POST request to the '/player' endpoint with the specified balance
         const response = await request(server)
             .post('/player')
             .send({ balance: mockPlayer.balance });
+            
         expect(response.statusCode).toEqual(200);
         expect(response.body).toHaveProperty('player');
         expect(response.body).toHaveProperty('balance', mockPlayer.balance);
-        mockPlayer.player = response.body.player
+        mockPlayer.player = response.body.player;
     });
+
     it('Should return an error for invalid balance value', async () => {
-        // Send a POST request to the '/player' endpoint with an invalid balance
         const response = await request(server)
-            .post('/player')
+            .post('/player');
         expect(response.statusCode).toEqual(400);
 
         expect(response.body).toHaveProperty('error');
     });
 });
 
-
-//get player test
 describe('Get player balance', () => {
     it('Should get the playerId and its balance', async () => {
-        const response = await request(server).get('/balance/' + mockPlayer.player)
+        const response = await request(server).get('/balance/' + mockPlayer.player);
         expect(response.statusCode).toEqual(200);
         expect(response.body).toHaveProperty('player', mockPlayer.player);
         expect(response.body).toHaveProperty('balance', mockPlayer.balance);
     })
+
     it('Should return error message', async () => {
-        const response = await request(server).get('/balance/' + nonExistingId)
+        const response = await request(server).get('/balance/' + nonExistingId);
         expect(response.statusCode).toEqual(400);
         expect(response.body).toHaveProperty('error');
-
-    })
-})
-
-// Post a bet
+    });
+});
 
 describe('Create new bet', () => {
     it('Should create a new bet, txn and update the player balance', async () => {
-        // Send a POST request to the '/bet' endpoint with the specified balance
         const response = await request(server)
             .post('/bet')
             .send({ playerId: mockPlayer.player, value: mockPlayer.bet });
@@ -75,9 +67,7 @@ describe('Create new bet', () => {
     });
 });
 
-
 describe('Rollback a bet value ', () => {
-
     it('Should cancel a bet and return the funds to the player balance', async () => {
         const response = await request(server)
             .post('/rollback')
@@ -127,14 +117,14 @@ describe('Delete player', () => {
             .post('/delete')
             .send({ playerId: mockPlayer.player });
 
-        expect(response.body).toHaveProperty('success', true)
-        expect(response.statusCode).toEqual(200)
+        expect(response.body).toHaveProperty('success', true);
+        expect(response.statusCode).toEqual(200);
     })
 
     it('Should return an error for an invalid value', async () => {
         const response = await request(server)
             .post('/delete')
-            .send({ playerId: mockPlayer.player});
+            .send({ playerId: mockPlayer.player });
 
         expect(response.status).toEqual(400);
         expect(response.body).toHaveProperty('success', false);

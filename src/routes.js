@@ -20,8 +20,9 @@ async function GetTransaction(txn, playerId, value) {
 function ValidateTransaction(playerId, value) {
     if (!playerId || isNaN(playerId))
         throw new Error(`Invalid format for PlayerId: ${playerId}`)
+
     if (!value || isNaN(value) || value.length <= 0)
-        throw new Error(`Invalid format for Value: ${value}`)
+        throw new Error(`Invalid format for Value: ${value}`);
 }
 
 router.post('/player', async (req, res) => {
@@ -35,7 +36,7 @@ router.post('/player', async (req, res) => {
 
         res.status(200).json({ player: player.id, balance: balance });
     } catch (err) {
-        res.status(400).json({ error: err.message })
+        res.status(400).json({ error: err.message });
     }
 })
 
@@ -44,12 +45,12 @@ router.get('/balance/:playerId', async (req, res) => {
         const playerId = parseInt(req.params.playerId);
 
         if (isNaN(playerId))
-            throw new Error("Input 'Id' is not a number;")
+            throw new Error("Input 'Id' is not a number;");
 
         let result = await getPlayer(playerId);
 
         if (result.length <= 0)
-            throw new Error(`No results were found for the ID ${playerId}`)
+            throw new Error(`No results were found for the ID ${playerId}`);
 
         res.status(200).json({ player: result.id, balance: result.balance });
     } catch (err) {
@@ -60,7 +61,7 @@ router.get('/balance/:playerId', async (req, res) => {
 router.post('/bet', async (req, res) => {
     try {
         const { playerId, value } = req.body;
-        ValidateTransaction(playerId, value)
+        ValidateTransaction(playerId, value);
 
         let player = await getPlayer(playerId);
         const balance = player.balance;
@@ -71,7 +72,7 @@ router.post('/bet', async (req, res) => {
 
         const newBalance = balance - value;
 
-        await db.UpdateCurrentBalance(playerId, newBalance)
+        await db.UpdateCurrentBalance(playerId, newBalance);
         const txn = await db.RegisterTransaction(playerId, value);
 
         res.status(200).json({ player: player.id, balance: newBalance, txn: txn.id });
@@ -83,7 +84,7 @@ router.post('/bet', async (req, res) => {
 router.post('/win', async (req, res) => {
     try {
         const isWin = 1;
-        const { playerId, value } = req.body
+        const { playerId, value } = req.body;
 
         ValidateTransaction(playerId, value);
 
@@ -92,7 +93,7 @@ router.post('/win', async (req, res) => {
 
         const newBalance = balance + value;
 
-        await db.UpdateCurrentBalance(playerId, newBalance)
+        await db.UpdateCurrentBalance(playerId, newBalance);
         const txn = await db.RegisterTransaction(playerId, value, isWin);
 
         res.json({ player: player.id, balance: newBalance, txn: txn.id });
@@ -102,29 +103,28 @@ router.post('/win', async (req, res) => {
     }
 });
 
-// rollback endpoint
 router.post('/rollback', async (req, res) => {
     try {
         const { playerId, value, txn } = req.body;
-
-        ValidateTransaction(playerId, value)
+        ValidateTransaction(playerId, value);
 
         const player = await getPlayer(playerId);
         const currentBalance = player.balance;
 
         if (!txn || isNaN(txn)) {
-            throw new Error(`Invalid transaction ID ${txn}`)
+            throw new Error(`Invalid transaction ID ${txn}`);
         }
 
         const transaction = await GetTransaction(txn, playerId, value);
 
         if (transaction.isCanceled == 1) {
             res.status(200).json({ code: 200, balance: currentBalance });
-            return
+            return;
         }
+
         if (transaction.isWin == 1) {
             res.status(200).json({ code: "Invalid operation - can't rollback a Win transaction" });
-            return
+            return;
         }
 
         const newBalance = currentBalance + transaction.betValue;
@@ -143,11 +143,12 @@ router.post('/delete', async (req, res) => {
     try {
         const { playerId } = req.body;
         let player = await getPlayer(playerId);
+        
         await db.DeletePlayer(player.id);
 
         res.status(200).json({ success: true });
     } catch (err) {
-        res.status(400).json({ success: false, message:'Player not found or already deleted.' });
+        res.status(400).json({ success: false, message: 'Player not found or already deleted.' });
     }
 })
-module.exports = router 
+module.exports = router;
