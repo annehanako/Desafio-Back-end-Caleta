@@ -65,6 +65,52 @@
                 }
             }
         },
+        "/delete": {
+            "post": {
+                "summary": "Delete a player",
+                "description": "Route for deleting a player.",
+                "tags": [
+                    "Player"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DeleteRequest"
+                            },
+                            "example": {
+                                "playerId": "7"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful delete with 200 code",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "code": 200,
+                                    "balance": 400
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "success": false,
+                                    "error": "Player not found or already deleted."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/balance/{playerId}": {
             "get": {
                 "summary": "Player balance request",
@@ -253,6 +299,13 @@
                     "balance": {
                         "type": "number",
                         "format": "float"
+                    }
+                }
+            },
+            "DeleteRequest": {
+                "properties": {
+                    "playerId": {
+                        "type": "integer"
                     }
                 }
             },

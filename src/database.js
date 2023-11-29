@@ -16,7 +16,8 @@ function InitDB() {
         database.run(`
         CREATE TABLE Player (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            balance REAL
+            balance REAL,
+            isDeleted bool default 0 not null
         );
         `);
 
@@ -52,7 +53,7 @@ async function GetCreatedId() {
 
 async function GetPlayerBalance(playerId) {
     try {
-        let query = `SELECT * FROM Player where id = ?`;
+        let query = `SELECT * FROM Player where id = ? AND isDeleted = 0`;
 
         return RunQuery(query, playerId)
     }
@@ -99,7 +100,7 @@ async function SetRefundOption(txn) {
         let query = `UPDATE BetTransactions SET isCanceled = 1 WHERE id = ?`;
         return RunQuery(query, txn);
     } catch (err) {
-        throw new Error(`Error querying database:${err.message}`);
+        throw new Error(`Error querying database: ${err.message}`);
     }
 }
 
@@ -114,6 +115,15 @@ async function CreatePlayer(balance) {
     }
 }
 
+async function DeletePlayer(playerId) {
+    try {
+        let query = `UPDATE PLAYER SET isDeleted = 1 WHERE ID = ? `
+        return await RunQuery(query, playerId);
+    } catch (err) {
+        throw new Error(`Error deleting player: ${playerId}`)
+    }
+}
+
 module.exports = {
     InitDB,
     RegisterTransaction,
@@ -121,5 +131,6 @@ module.exports = {
     UpdateCurrentBalance,
     SetRefundOption,
     GetTransaction,
-    CreatePlayer
+    CreatePlayer,
+    DeletePlayer
 };

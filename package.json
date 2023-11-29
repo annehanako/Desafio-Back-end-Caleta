@@ -15,5 +15,9 @@
     "sqlite3": "^5.1.6",
     "swagger-ui-express": "^5.0.0",
     "yarn": "^1.22.21"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
   }
 }

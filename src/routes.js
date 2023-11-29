@@ -20,14 +20,15 @@ async function GetTransaction(txn, playerId, value) {
 function ValidateTransaction(playerId, value) {
     if (!playerId || isNaN(playerId))
         throw new Error(`Invalid format for PlayerId: ${playerId}`)
-    if (!value || isNaN(value) || value <= 0)
+    if (!value || isNaN(value) || value.length <= 0)
         throw new Error(`Invalid format for Value: ${value}`)
 }
 
 router.post('/player', async (req, res) => {
     try {
         const balance = (req.body.balance);
-        if (isNaN(balance) || balance <=0) 
+
+        if (isNaN(balance) || balance <= 0)
             throw new Error("The balance value must be a positive number.");
 
         const player = await db.CreatePlayer(balance);
@@ -75,7 +76,6 @@ router.post('/bet', async (req, res) => {
 
         res.status(200).json({ player: player.id, balance: newBalance, txn: txn.id });
     } catch (err) {
-        console.error("Error registering bet:", err.message);
         res.status(400).json({ success: false, error: err.message });
     }
 });
@@ -133,11 +133,21 @@ router.post('/rollback', async (req, res) => {
         await db.SetRefundOption(txn);
 
         res.status(200).json({ code: 200, balance: newBalance });
-    }
-    catch (err) {
+    } catch (err) {
         console.error("Error processing refund.", err.message);
         res.status(400).json({ success: false, error: err.message });
     }
 });
 
+router.post('/delete', async (req, res) => {
+    try {
+        const { playerId } = req.body;
+        let player = await getPlayer(playerId);
+        await db.DeletePlayer(player.id);
+
+        res.status(200).json({ success: true });
+    } catch (err) {
+        res.status(400).json({ success: false, message:'Player not found or already deleted.' });
+    }
+})
 module.exports = router 

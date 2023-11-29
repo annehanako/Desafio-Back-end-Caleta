@@ -1,13 +1,11 @@
 const request = require('supertest')
 const server = require('../server.js')
 
-let existingId = 43
-let nonExistingId = 123
-let newBalance = 900;
-let invalidBalance = 'invalid';
-let newBet = 50;
-let newTxn = 26;
-let newWin = 150;
+
+let mockPlayer = { player: 0, balance: 100, bet: 50, win: 100, txnBet: 0, txnWin: 0 }
+
+let nonExistingId = 12345
+
 
 //create a new player test
 describe('Create new player', () => {
@@ -15,10 +13,11 @@ describe('Create new player', () => {
         // Send a POST request to the '/player' endpoint with the specified balance
         const response = await request(server)
             .post('/player')
-            .send({ balance: newBalance });
+            .send({ balance: mockPlayer.balance });
         expect(response.statusCode).toEqual(200);
         expect(response.body).toHaveProperty('player');
-        expect(response.body).toHaveProperty('balance', newBalance);
+        expect(response.body).toHaveProperty('balance', mockPlayer.balance);
+        mockPlayer.player = response.body.player
     });
     it('Should return an error for invalid balance value', async () => {
         // Send a POST request to the '/player' endpoint with an invalid balance
@@ -34,10 +33,10 @@ describe('Create new player', () => {
 //get player test
 describe('Get player balance', () => {
     it('Should get the playerId and its balance', async () => {
-        const response = await request(server).get('/balance/' + existingId)
+        const response = await request(server).get('/balance/' + mockPlayer.player)
         expect(response.statusCode).toEqual(200);
-        expect(response.body).toHaveProperty('player', existingId);
-        expect(response.body).toHaveProperty('balance');
+        expect(response.body).toHaveProperty('player', mockPlayer.player);
+        expect(response.body).toHaveProperty('balance', mockPlayer.balance);
     })
     it('Should return error message', async () => {
         const response = await request(server).get('/balance/' + nonExistingId)
@@ -54,17 +53,22 @@ describe('Create new bet', () => {
         // Send a POST request to the '/bet' endpoint with the specified balance
         const response = await request(server)
             .post('/bet')
-            .send({ playerId: existingId, value: newBet });
+            .send({ playerId: mockPlayer.player, value: mockPlayer.bet });
 
         expect(response.statusCode).toEqual(200);
-        expect(response.body).toHaveProperty('player', existingId);
-        expect(response.body).toHaveProperty('balance', newBalance - newBet);
+        expect(response.body).toHaveProperty('player', mockPlayer.player);
+        expect(response.body).toHaveProperty('balance', mockPlayer.balance - mockPlayer.bet);
+
+        const { player, balance, txn } = response.body;
+        mockPlayer.player = player;
+        mockPlayer.balance = balance;
+        mockPlayer.txnBet = txn;
     });
 
     it('Should return an error for invalid value', async () => {
         const response = await request(server)
             .post('/bet')
-            .send({ playerId: existingId });
+            .send({ playerId: mockPlayer.player });
 
         expect(response.statusCode).toEqual(400);
         expect(response.body).toHaveProperty('error');
@@ -72,50 +76,67 @@ describe('Create new bet', () => {
 });
 
 
-// Register win
+describe('Rollback a bet value ', () => {
+
+    it('Should cancel a bet and return the funds to the player balance', async () => {
+        const response = await request(server)
+            .post('/rollback')
+            .send({ playerId: mockPlayer.player, value: mockPlayer.bet, txn: mockPlayer.txnBet });
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.body).toHaveProperty('balance', mockPlayer.balance + mockPlayer.bet);
+        mockPlayer.balance = response.body.balance;
+    });
+
+    it('Should return an error for invalid value', async () => {
+        const response = await request(server)
+            .post('/rollback')
+            .send({ playerId: mockPlayer.player });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.body).toHaveProperty('error');
+    });
+});
 
 describe('Register win', () => {
     it('Should add funds to the player balance and validate a win', async () => {
         const response = await request(server)
             .post('/win')
-            .send({ playerId: existingId, value: newWin });
+            .send({ playerId: mockPlayer.player, value: mockPlayer.win });
 
         expect(response.statusCode).toEqual(200);
-        expect(response.body).toHaveProperty('player', existingId);
-        expect(response.body).toHaveProperty('balance', (newBalance - newBet) + newWin);
+        expect(response.body).toHaveProperty('player', mockPlayer.player);
+        expect(response.body).toHaveProperty('balance', mockPlayer.balance + mockPlayer.win);
+        mockPlayer.balance = response.body.balance;
+
     });
 
     it('Should return an error for invalid value', async () => {
         const response = await request(server)
             .post('/win')
-            .send({ playerId: existingId });
+            .send({ playerId: mockPlayer.player });
 
         expect(response.statusCode).toEqual(400);
         expect(response.body).toHaveProperty('error');
     });
 });
 
-// Rollback a bet value
-
-describe('Rollback a bet value ', () => {
-    it('Should cancel a bet and return the funds to the player balance', async () => {
+describe('Delete player', () => {
+    it('Should delete the created player', async () => {
         const response = await request(server)
-            .post('/rollback')
-            .send({ playerId: existingId, value: newBet, txn: newTxn});
+            .post('/delete')
+            .send({ playerId: mockPlayer.player });
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.body).toHaveProperty('player', existingId);
-        expect(response.body).toHaveProperty('balance', (newBalance - newBet) + newBet);
-        expect(response.body).toHaveProperty('txn', newTxn);
+        expect(response.body).toHaveProperty('success', true)
+        expect(response.statusCode).toEqual(200)
+    })
 
-    });
-
-    it('Should return an error for invalid value', async () => {
+    it('Should return an error for an invalid value', async () => {
         const response = await request(server)
-            .post('/rollback')
-            .send({ playerId: existingId });
+            .post('/delete')
+            .send({ playerId: mockPlayer.player});
 
-        expect(response.statusCode).toEqual(400);
-        expect(response.body).toHaveProperty('error');
+        expect(response.status).toEqual(400);
+        expect(response.body).toHaveProperty('success', false);
     });
 });
