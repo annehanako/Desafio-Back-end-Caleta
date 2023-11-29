@@ -12,9 +12,7 @@ Desafio referente a vaga de back-end na empresa Caleta
     * npx jest
 
 ## Execute application with docker:
-Build the container:
 * docker build --no-cache -t caleta-challenge .
-
 * docker run caleta-challenge -p 3000:3000
  start docker server at localhost:3000
 
